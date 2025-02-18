@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { check } from "express-validator";
 import userContriller from "../controllers/userContriller.js";
+import { auth } from "../middleware/auth.middleware.js";
 
 const router = new Router();
 
@@ -15,5 +16,6 @@ router.post(
   userContriller.registration
 );
 router.post("/login", userContriller.login);
+router.get("/auth", auth, userContriller.auth);
 
 export default router;
