@@ -1,24 +1,37 @@
 import bcrypt from "bcrypt";
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
-import { User } from "../models/models.js";
+import { User, File } from "../models/models.js";
+import fileServices from "../services/fileServices.js";
 
 class UserController {
   async registration(req, res) {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({ message: errors });
+        return res.status(400).json({ message: errors.array() });
       }
-
       const { email, password } = req.body;
-
       const candidate = await User.findOne({ where: { email } });
       if (candidate) {
         throw new Error(`Пользователь с ${email}  - существует`);
       }
       const hasPassword = await bcrypt.hash(password, 6);
       const user = await User.create({ email, password: hasPassword });
+
+      const rootDir = await File.create({
+        user: user.id,
+        name: email, // Используем email как имя корневой директории
+        type: "dir", // Укажите тип "dir"
+        accessLink: "", // Или что-то подходящее
+        size: 0, // Размер директории
+      });
+
+      await fileServices.createDir(rootDir, user.id);
+
+      // await fileServices.createDir(
+      //   File.create({ where: { userId: user.id, name: user.id } })
+      // );
 
       return res.json({
         message: `Пользователь ${user.email} успешно зарегистрирован`,
