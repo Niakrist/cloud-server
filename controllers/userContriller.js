@@ -71,13 +71,17 @@ class UserController {
       });
     } catch (error) {
       console.log("error: ", error);
-      return res.status(400).json({ message: error });
+      return res.status(500).json({ message: "Внутренняя ошибка сервера" });
     }
   }
 
   async auth(req, res) {
     try {
       const user = await User.findOne({ where: { id: req.user.id } });
+
+      if (!user) {
+        return res.status(404).json({ message: "Пользователь не найден" });
+      }
 
       const token = jwt.sign(
         { id: user.id, email: user.email },
